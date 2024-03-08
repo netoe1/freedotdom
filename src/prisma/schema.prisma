@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id          String  @id @default(uuid())
+  tag         String?
+  title       String
+  description String?
+  users       User[]
+}
+
+model User {
+  id       String   @id @default(uuid())
+  username String
+  password String
+  posts    Post[] // One-to-many relationship with Post
+  friends1 Friend[] @relation("FriendToUser1") // Relation name to disambiguate
+  friends2 Friend[] @relation("FriendToUser2") // Relation name to disambiguate
+
+  friendSolicitationOwner     FriendSolicitation[] @relation("userOwner")
+  friendSolicitationRequested FriendSolicitation[] @relation("userRequested")
+}
+
+model Friend {
+  id      String @id @default(uuid())
+  user1   User   @relation("FriendToUser1", fields: [user1Id], references: [id])
+  user1Id String
+  user2   User   @relation("FriendToUser2", fields: [user2Id], references: [id])
+  user2Id String
+}
+
+model FriendSolicitation {
+  id              String  @id
+  requestedUserId String
+  userOwnerId     String
+  isAccepted      Boolean
+
+  userOwner     User @relation("userOwner", fields: [userOwnerId], references: [id])
+  userRequested User @relation("userRequested", fields: [requestedUserId], references: [id])
+}
